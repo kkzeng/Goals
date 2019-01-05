@@ -2,7 +2,7 @@
 
 An Android app written in Kotlin focusing on helping users to make goals and tasks to do.
 
-# Dev Notes:
+# Dev Notes
 
 Functionality implemented so far
 
