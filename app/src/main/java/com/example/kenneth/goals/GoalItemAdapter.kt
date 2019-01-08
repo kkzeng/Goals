@@ -51,10 +51,7 @@ class GoalItemAdapter(val context: Context, val items : ArrayList<GoalItem>) : R
         // Set an listener for the checkbox to remove the item
         viewHolder.goalCheckBox.setOnCheckedChangeListener { _,_ ->
             recyclerView.post {
-                val pos = viewHolder.adapterPosition
-                items.removeAt(pos)
-                notifyItemRemoved(pos)
-                SaveUtil.writeGoalList(this@GoalItemAdapter.context, items)
+                MainActivity.removeGoalItem(this, viewHolder, this@GoalItemAdapter.context)
             }
         }
 

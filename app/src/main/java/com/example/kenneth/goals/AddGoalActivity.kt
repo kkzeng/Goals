@@ -46,7 +46,8 @@ class AddGoalActivity : AppCompatActivity() {
             image=null,
             priority = goalPrioritySlider.progress)
 
-        goalList.add(newItem)
+        // Add the item to the start of the list
+        goalList.add(0, newItem)
 
         // Save the goal list
         SaveUtil.writeGoalList(this, goalList)
