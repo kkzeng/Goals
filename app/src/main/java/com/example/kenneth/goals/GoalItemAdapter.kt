@@ -49,8 +49,12 @@ class GoalItemAdapter(val context: Context, val items : ArrayList<GoalItem>) : R
         viewHolder.goalCheckBox!!.isChecked = false
 
         // Set an listener for the checkbox to remove the item
-        viewHolder.goalCheckBox.setOnCheckedChangeListener { _,_ ->
-            recyclerView.post {
+        // Interesting note: When using onCheckedChangeListener, when my view was
+        // recreated after choosing to Undo the delete, I set the checkbox to Unchecked
+        // and this triggers the listener which results in some unpredictable behaviour/crashes
+        // Must check for isChecked to get the desired behaviour
+        viewHolder.goalCheckBox.setOnCheckedChangeListener { _,isChecked ->
+            if(isChecked) {
                 MainActivity.removeGoalItem(this, viewHolder, this@GoalItemAdapter.context)
             }
         }
