@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
             goalItemAdapter.notifyItemRemoved(toRemove.adapterPosition)
 
             // Display snackbar
-            Snackbar.make(toRemove.itemView, removedItem!!.title, Snackbar.LENGTH_INDEFINITE).setAction("UNDO") {
+            Snackbar.make(toRemove.itemView, "${removedItem!!.title} deleted", Snackbar.LENGTH_INDEFINITE).setAction("UNDO") {
                 goalItemAdapter.items.add(removedPos, removedItem!!)
                 goalItemAdapter.notifyItemInserted(removedPos)
 
@@ -98,21 +98,24 @@ class MainActivity : AppCompatActivity() {
 
     // Handler method for clearing all goals
     fun clearAllGoals(@Suppress("UNUSED_PARAMETER") v: View) {
+        val goalItemListCopy = goalItemAdapter.items.clone() as ArrayList<GoalItem>
+        var undoChosen = false
         // Clear all items from the array list
         goalItemAdapter.items.clear()
         goalItemAdapter.notifyDataSetChanged()
 
         // Display a Snackbar asking if the user wishes to 'Undo' the delete
+        Snackbar.make(goalRecyclerView, "Removed all items", Snackbar.LENGTH_SHORT).setAction("UNDO") {
+            goalItemAdapter.items.addAll(goalItemListCopy)
+            goalItemAdapter.notifyDataSetChanged()
+            undoChosen = true
+        }.show()
 
         // If user does not choose to undo then
         // save new empty list under key
-        SaveUtil.writeGoalList(this, ArrayList())
-
-        /*// Otherwise, load it back
-        if(Undo) {
-            val oldSavedList = SaveUtil.loadGoalList(this)
-            goalItemAdapter.items.addAll(oldSavedList)
-        }*/
+        if(!undoChosen) {
+            SaveUtil.writeGoalList(this, ArrayList())
+        }
     }
 
     // Handler method for sorting by priority
