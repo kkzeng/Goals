@@ -1,4 +1,4 @@
-# Goalzee
+# Goals
 
 An Android app written in Kotlin focusing on helping users to make goals and tasks to do.
 
