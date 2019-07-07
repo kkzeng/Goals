@@ -7,4 +7,4 @@ data class GoalItem(var title: String,
                     var priority: Int,
                     @DrawableRes var image: Int?)
 
-// Maybe add completion progression slider later on in CardView
+// TODO: Maybe add completion progression slider later on in CardView

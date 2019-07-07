@@ -37,6 +37,8 @@
             android:layout_height="20dp"
             android:id="@+id/description_edittext"
             android:layout_margin="15dp"
+            android:maxLines="3"
+            android:maxWidth="100dp"
             android:background="@drawable/edittext_round"/>
 
     <TextView
@@ -78,6 +80,16 @@
                 android:layout_marginStart="50dp"
                 android:text="Add Goal"
                 android:onClick="addNewGoalItem"
+        />
+
+        <Button
+                android:id="@+id/edit_button"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="50dp"
+                android:text="Edit Goal"
+                android:onClick="editGoalItem"
         />
 
         <Button

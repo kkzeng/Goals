@@ -7,14 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.RelativeLayout
 import android.widget.TextView
 
 
 class GoalItemAdapter(val context: Context, val items : ArrayList<GoalItem>) : RecyclerView.Adapter<GoalItemAdapter.GoalItemViewHolder>() {
 
     companion object {
-        private const val GOAL_ITEM = 0
-        private const val ADD_BUTTON = 1
+        const val GOAL_ITEM = 0
+        const val ADD_BUTTON = 1
     }
 
     lateinit var recyclerView: RecyclerView
@@ -59,6 +60,11 @@ class GoalItemAdapter(val context: Context, val items : ArrayList<GoalItem>) : R
             }
         }
 
+        // Sets long press listener for editing goals
+        viewHolder.container!!.setOnClickListener {
+            (context as MainActivity).openEditGoalActivity(viewHolder.adapterPosition)
+        }
+
         // Get a val copy of the var so it is not mutable
         val drawable = goalItem.image
 
@@ -82,6 +88,7 @@ class GoalItemAdapter(val context: Context, val items : ArrayList<GoalItem>) : R
     }
 
     inner class GoalItemViewHolder (view: View) : RecyclerView.ViewHolder(view) {
+        val container: RelativeLayout? = view.findViewById(R.id.container)
         val goalImageView: ImageView? = view.findViewById(R.id.goal_image)
         val goalTitleView: TextView? = view.findViewById(R.id.goal_title)
         val goalDescView: TextView? = view.findViewById(R.id.goal_desc)

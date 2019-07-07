@@ -10,13 +10,15 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.support.design.widget.Snackbar
 import android.view.View
+import com.example.kenneth.goals.GoalItemAdapter.Companion.ADD_BUTTON
+import com.example.kenneth.goals.ModifyGoalActivity.Companion.ADAPTER_POS_BUNDLE_KEY
+import com.example.kenneth.goals.ModifyGoalActivity.Companion.ADD_GOAL_REQUEST_CODE
+import com.example.kenneth.goals.ModifyGoalActivity.Companion.EDIT_GOAL_REQUEST_CODE
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        val ADD_GOAL_REQUEST_CODE = 1
-
         // Temporarily hold removed item for potential 'Undo' action
         var removedPos: Int = -1
         var removedItem: GoalItem? = null
@@ -32,21 +34,21 @@ class MainActivity : AppCompatActivity() {
             goalItemAdapter.notifyItemRemoved(toRemove.adapterPosition)
 
             // Display snackbar
-            Snackbar.make(toRemove.itemView, "${removedItem!!.title} deleted", Snackbar.LENGTH_INDEFINITE).setAction("UNDO") {
-                goalItemAdapter.items.add(removedPos, removedItem!!)
-                goalItemAdapter.notifyItemInserted(removedPos)
+            Snackbar.make(toRemove.itemView, "${removedItem!!.title} deleted", Snackbar.LENGTH_INDEFINITE)
+                .setAction("UNDO") {
+                    goalItemAdapter.items.add(removedPos, removedItem!!)
+                    goalItemAdapter.notifyItemInserted(removedPos)
 
-                // UI tweak: If we removed the first item, scroll back to the top, to avoid weird
-                // cut off item at the top.if(removedPos == 0) {
+                    // UI tweak: If we removed the first item, scroll back to the top, to avoid weird
+                    // cut off item at the top.if(removedPos == 0) {
                     goalItemAdapter.recyclerView.scrollToPosition(0)
-            }.show()
+                }.show()
 
             // Save
             SaveUtil.writeGoalList(context, goalItemAdapter.items)
-
         }
-
     }
+
     // RecyclerView for list of goals
     lateinit var goalRecyclerView: RecyclerView
     lateinit var goalItemAdapter: GoalItemAdapter
@@ -77,12 +79,40 @@ class MainActivity : AppCompatActivity() {
                 Collections.swap(goalItemAdapter.items, posDragged, posTarget)
                 goalItemAdapter.notifyItemMoved(posDragged, posTarget)
 
+                // Scroll to the position that the item was dragged
+                recyclerView.smoothScrollToPosition(posTarget)
+
                 SaveUtil.writeGoalList(this@MainActivity, goalItemAdapter.items)
                 return false
             }
 
+            override fun canDropOver(
+                recyclerView: RecyclerView,
+                current: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return if(recyclerView.adapter!!.getItemViewType(target.adapterPosition) == ADD_BUTTON) false;
+                else super.canDropOver(recyclerView, current, target)
+            }
+
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 MainActivity.removeGoalItem(goalItemAdapter, viewHolder, this@MainActivity)
+            }
+
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+                return if(recyclerView.adapter!!.getItemViewType(viewHolder.adapterPosition) == ADD_BUTTON) {
+                    ItemTouchHelper.Callback.makeMovementFlags(0, 0)
+                } else {
+                    super.getMovementFlags(recyclerView, viewHolder)
+                }
+            }
+
+            override fun getDragDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+                return if(recyclerView.adapter!!.getItemViewType(viewHolder.adapterPosition) == ADD_BUTTON) {
+                    ItemTouchHelper.Callback.makeMovementFlags(0, 0)
+                } else {
+                    super.getDragDirs(recyclerView, viewHolder)
+                }
             }
         }
         val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
@@ -92,8 +122,21 @@ class MainActivity : AppCompatActivity() {
     // Handler method for adding goals
     fun openAddGoalActivity(@Suppress("UNUSED_PARAMETER") v: View) {
         // Open an activity to add goals
-        val intent = Intent(this, AddGoalActivity::class.java)
+        val intent = Intent(this, ModifyGoalActivity::class.java)
         startActivityForResult(intent, ADD_GOAL_REQUEST_CODE)
+    }
+
+    fun openEditGoalActivity(adapterPosition: Int) {
+        // Get relevant information
+        val goalItem = goalItemAdapter.items[adapterPosition]
+
+        val title = goalItem.title
+        val desc = goalItem.desc
+        val priority = goalItem.priority
+
+        // Open an activity to add goals
+        val intent = ModifyGoalActivity.createEditIntent(this, title, desc, priority, adapterPosition)
+        startActivityForResult(intent, EDIT_GOAL_REQUEST_CODE)
     }
 
     // Handler method for clearing all goals
@@ -125,7 +168,6 @@ class MainActivity : AppCompatActivity() {
         SaveUtil.writeGoalList(this, goalItemAdapter.items)
     }
 
-    // TODO: Not working, need to add new items to old list in adapter
     private fun refreshAdapterWithNewItem() {
         // A new item was added
         val tempGoalList = SaveUtil.loadGoalList(this)
@@ -139,12 +181,29 @@ class MainActivity : AppCompatActivity() {
         goalRecyclerView.scrollToPosition(0)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if(resultCode != Activity.RESULT_CANCELED) {
-            refreshAdapterWithNewItem()
-        }
+    private fun refreshDataOnEditedItem(adapterPosition: Int) {
+        // An item was edited
+        val tempGoalList = SaveUtil.loadGoalList(this)
+        val editedGoalItem = tempGoalList[adapterPosition]
 
-        // Otherwise, we did not add a new goal so we do not need to refresh the adapter data
+        // The edited item was in our saved copy of the list, update this in our live list
+        goalItemAdapter.items[adapterPosition] = editedGoalItem
+
+        // Refresh just the data for the one edited item
+        goalItemAdapter.notifyItemChanged(adapterPosition)
+    }
+
+    @Throws(Exception::class)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // We cancelled so we do not need to refresh the adapter data
+        if(resultCode == Activity.RESULT_CANCELED) return
+        if(requestCode == ADD_GOAL_REQUEST_CODE) refreshAdapterWithNewItem()
+        if(requestCode == EDIT_GOAL_REQUEST_CODE) {
+            // For edits, we always pass back the intent with the extra containing the adapter position
+            val adapterPos = data!!.getIntExtra(ADAPTER_POS_BUNDLE_KEY, -1)
+            if(adapterPos == -1) throw Exception()
+            refreshDataOnEditedItem(adapterPos)
+        }
     }
 
     internal class GoalItemComparator : Comparator<GoalItem> {
