@@ -7,13 +7,15 @@ An Android app written in Kotlin focusing on helping users to make goals and tas
 Functionality implemented so far
 
 1. Basic list of goals displayed
-2. Ability to add title, description, priority and image (coming soon)
-3. Swipe to delete and drag to reorder goals
-4. Sort by priority of goal automatically
-5. Goals persist through app
+1. Ability to add title, description, priority and image (coming soon)
+1. Ability to edit previously added goals easily
+1. Swipe to delete and drag to reorder goals
+1. Sort by priority of goals automatically
+1. Goals persist through app
 
 Features to be implemented
 
+1. Categorized/section separated goals
+1. Floating action button instead of the button in the list
 1. Proper storage of goals in some SQL database + remote
-2. Editable goals
-3. UI improvements (currently UI is barebones)
+1. UI improvements (currently UI is barebones)
