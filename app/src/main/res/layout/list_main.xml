@@ -53,7 +53,7 @@
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="4dp"
                     android:layout_toRightOf="@id/goal_image"
-                    android:background="@color/colorPrimary"
+                    android:background="@android:color/holo_orange_dark"
                     android:paddingLeft="15dp"
                     android:paddingRight="15dp"
                     android:text="4.7"

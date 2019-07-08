@@ -70,6 +70,14 @@ class ModifyGoalActivity : AppCompatActivity() {
 
         isInEditMode = intent.getBooleanExtra(EDIT_MODE_KEY, false)
         if(isInEditMode) loadAndSetInfoForEdit()
+        else prepareForAdd()
+    }
+
+    fun prepareForAdd() {
+        val editButton = findViewById<Button>(R.id.edit_button)
+        val addButton = findViewById<Button>(R.id.add_button)
+        addButton.visibility = View.VISIBLE
+        editButton.visibility = View.GONE
     }
 
     fun loadAndSetInfoForEdit() {

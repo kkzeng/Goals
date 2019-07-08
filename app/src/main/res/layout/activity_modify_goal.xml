@@ -2,7 +2,7 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="match_parent" xmlns:tools="http://schemas.android.com/tools"
         android:orientation="vertical"
         android:background="#5edcff">
 
@@ -17,9 +17,10 @@
 
     <EditText
             android:layout_width="match_parent"
-            android:layout_height="20dp"
+            android:layout_height="25dp"
             android:id="@+id/title_edittext"
             android:layout_margin="15dp"
+            tools:text="Hello"
             android:background="@drawable/edittext_round"
     />
 
@@ -34,11 +35,12 @@
 
     <EditText
             android:layout_width="match_parent"
-            android:layout_height="20dp"
+            android:layout_height="100dp"
             android:id="@+id/description_edittext"
             android:layout_margin="15dp"
-            android:maxLines="3"
+            android:maxLines="5"
             android:maxWidth="100dp"
+            android:gravity="top|start"
             android:background="@drawable/edittext_round"/>
 
     <TextView
