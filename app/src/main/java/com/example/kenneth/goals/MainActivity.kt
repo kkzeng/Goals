@@ -10,6 +10,8 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.support.design.widget.Snackbar
 import android.view.View
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import com.example.kenneth.goals.GoalItemAdapter.Companion.ADD_BUTTON
 import com.example.kenneth.goals.ModifyGoalActivity.Companion.ADAPTER_POS_BUNDLE_KEY
 import com.example.kenneth.goals.ModifyGoalActivity.Companion.ADD_GOAL_REQUEST_CODE
@@ -71,51 +73,7 @@ class MainActivity : AppCompatActivity() {
         goalRecyclerView.adapter = goalItemAdapter
 
         // Implement gestures like drag and swipe
-        val itemTouchHelperCallback = object: ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-            override fun onMove(recyclerView: RecyclerView, dragged: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                val posDragged = dragged.adapterPosition
-                val posTarget = target.adapterPosition
-
-                Collections.swap(goalItemAdapter.items, posDragged, posTarget)
-                goalItemAdapter.notifyItemMoved(posDragged, posTarget)
-
-                // Scroll to the position that the item was dragged
-                recyclerView.smoothScrollToPosition(posTarget)
-
-                SaveUtil.writeGoalList(this@MainActivity, goalItemAdapter.items)
-                return false
-            }
-
-            override fun canDropOver(
-                recyclerView: RecyclerView,
-                current: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                return if(recyclerView.adapter!!.getItemViewType(target.adapterPosition) == ADD_BUTTON) false;
-                else super.canDropOver(recyclerView, current, target)
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                MainActivity.removeGoalItem(goalItemAdapter, viewHolder, this@MainActivity)
-            }
-
-            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
-                return if(recyclerView.adapter!!.getItemViewType(viewHolder.adapterPosition) == ADD_BUTTON) {
-                    ItemTouchHelper.Callback.makeMovementFlags(0, 0)
-                } else {
-                    super.getMovementFlags(recyclerView, viewHolder)
-                }
-            }
-
-            override fun getDragDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
-                return if(recyclerView.adapter!!.getItemViewType(viewHolder.adapterPosition) == ADD_BUTTON) {
-                    ItemTouchHelper.Callback.makeMovementFlags(0, 0)
-                } else {
-                    super.getDragDirs(recyclerView, viewHolder)
-                }
-            }
-        }
-        val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
+        val itemTouchHelper = ItemTouchHelper(GoalItemTouchHelperCallback())
         itemTouchHelper.attachToRecyclerView(goalRecyclerView)
     }
 
@@ -166,6 +124,9 @@ class MainActivity : AppCompatActivity() {
         goalItemAdapter.items.sortWith(GoalItemComparator())
         goalItemAdapter.notifyDataSetChanged()
         SaveUtil.writeGoalList(this, goalItemAdapter.items)
+
+        // Show user that the action was performed
+        Toast.makeText(this, "Sorted goals by priority", LENGTH_SHORT).show()
     }
 
     private fun refreshAdapterWithNewItem() {
@@ -206,11 +167,68 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    internal class GoalItemComparator : Comparator<GoalItem> {
+    private class GoalItemComparator : Comparator<GoalItem> {
         override fun compare(c1: GoalItem, c2: GoalItem): Int {
 
             // Sorts in descending order of priority
             return c2.priority.compareTo(c1.priority)
+        }
+    }
+
+    inner class GoalItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+        override fun onMove(recyclerView: RecyclerView, dragged: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+            val posDragged = dragged.adapterPosition
+            val posTarget = target.adapterPosition
+
+            Collections.swap(goalItemAdapter.items, posDragged, posTarget)
+            goalItemAdapter.notifyItemMoved(posDragged, posTarget)
+
+            // Scroll to the position that the item was dragged
+            recyclerView.smoothScrollToPosition(posTarget)
+
+            SaveUtil.writeGoalList(this@MainActivity, goalItemAdapter.items)
+            return false
+        }
+
+        override fun canDropOver(
+            recyclerView: RecyclerView,
+            current: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            return if(recyclerView.adapter!!.getItemViewType(target.adapterPosition) == ADD_BUTTON) false;
+            else super.canDropOver(recyclerView, current, target)
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            MainActivity.removeGoalItem(goalItemAdapter, viewHolder, this@MainActivity)
+        }
+
+        override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+            return if (recyclerView.adapter!!.getItemViewType(viewHolder.adapterPosition) == ADD_BUTTON) {
+                ItemTouchHelper.Callback.makeMovementFlags(0, 0)
+            } else if (viewHolder.adapterPosition == recyclerView.adapter!!.itemCount - 2 || viewHolder.adapterPosition == 0) {
+                // If it is the last item that is not the button make it so that it cannot be dragged downwards
+                // If it is the first item, it cannot be dragged upwards
+                val itemCount = recyclerView.adapter!!.itemCount;
+                when {
+                    // ItemCount == 2, means theres only 1 goal item
+                    itemCount == 2 -> ItemTouchHelper.Callback.makeMovementFlags(
+                        0,
+                        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    )
+                    viewHolder.adapterPosition == itemCount - 2 -> ItemTouchHelper.Callback.makeMovementFlags(
+                        ItemTouchHelper.UP,
+                        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    )
+                    viewHolder.adapterPosition == 0 -> ItemTouchHelper.Callback.makeMovementFlags(
+                        ItemTouchHelper.DOWN,
+                        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    )
+                    else -> super.getDragDirs(recyclerView, viewHolder)
+                }
+            } else {
+                super.getMovementFlags(recyclerView, viewHolder)
+            }
         }
     }
 }
