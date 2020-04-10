@@ -107,6 +107,7 @@ class ModifyGoalActivity : AppCompatActivity() {
         val newItem = GoalItem(title=goalTitleEditText.text.toString(),
             desc=goalDescEditText.text.toString(),
             image=null,
+            timeStamp = System.currentTimeMillis(),
             priority = goalPrioSeekBar.progress)
 
         // Add the item to the start of the list

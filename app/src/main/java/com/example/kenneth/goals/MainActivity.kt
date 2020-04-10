@@ -167,14 +167,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private class GoalItemComparator : Comparator<GoalItem> {
-        override fun compare(c1: GoalItem, c2: GoalItem): Int {
-
-            // Sorts in descending order of priority
-            return c2.priority.compareTo(c1.priority)
-        }
-    }
-
     inner class GoalItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
         override fun onMove(recyclerView: RecyclerView, dragged: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
             val posDragged = dragged.adapterPosition
